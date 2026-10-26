@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>π — презентация</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; font-family:'Segoe UI',system-ui,sans-serif; background:#0a0a0a; color:#eee; }
+
+  .deck { position:relative; width:100vw; height:100vh; }
+
+  .slide {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:5vh 8vw;
+    opacity:0; transform:translateY(20px);
+    transition:opacity .5s ease, transform .5s ease;
+    pointer-events:none;
+    background:linear-gradient(160deg, #0a0a0a 0%, #131313 100%);
+    overflow:hidden;
+  }
+  .slide.active { opacity:1; transform:translateY(0); pointer-events:auto; z-index:2; }
+
+  .slide::before {
+    content:''; position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size:80px 80px;
+    pointer-events:none;
+  }
+
+  h1, h2, p, li, .sub, .fact, .formula, .big-claim { position:relative; z-index:2; }
+
+  h1 {
+    font-size:clamp(3rem, 8vw, 6.5rem);
+    color:#d4a017;
+    font-weight:700;
+    letter-spacing:.02em;
+    margin-bottom:.8rem;
+    line-height:1;
+  }
+
+  .big-claim {
+    font-size:clamp(1.3rem, 2.8vw, 2rem);
+    color:#d0d0d0;
+    font-weight:600;
+    max-width:950px;
+    line-height:1.3;
+    margin-bottom:.8rem;
+  }
+  .big-claim .gold { color:#d4a017; }
+
+  h2 {
+    font-size:clamp(1.6rem, 4vw, 2.8rem);
+    color:#d4a017;
+    font-weight:700;
+    margin-bottom:1.4rem;
+    display:flex; align-items:center; gap:.6rem;
+  }
+  h2 .icon { font-size:1em; opacity:.85; }
+
+  p, li { font-size:clamp(1rem, 1.6vw, 1.35rem); line-height:1.65; color:#d0d0d0; margin-bottom:.65rem; }
+  ul { padding-left:0; list-style:none; max-width:920px; }
+  li {
+    position:relative; padding-left:1.8rem;
+    opacity:0; transform:translateX(-20px);
+  }
+  li::before {
+    content:'—'; position:absolute; left:0; color:#d4a017;
+    font-weight:bold;
+  }
+  .slide.active li { animation:slideIn .4s ease forwards; }
+  .slide.active li:nth-child(1) { animation-delay:.1s; }
+  .slide.active li:nth-child(2) { animation-delay:.2s; }
+  .slide.active li:nth-child(3) { animation-delay:.3s; }
+  .slide.active li:nth-child(4) { animation-delay:.4s; }
+  .slide.active li:nth-child(5) { animation-delay:.5s; }
+  .slide.active li:nth-child(6) { animation-delay:.6s; }
+  .slide.active li:nth-child(7) { animation-delay:.7s; }
+  .slide.active li:nth-child(8) { animation-delay:.8s; }
+  @keyframes slideIn { to { opacity:1; transform:translateX(0); } }
+
+  .fact {
+    background:#161616;
+    border-left:3px solid #d4a017;
+    padding:.9rem 1.2rem; margin-top:1rem;
+    border-radius:0 8px 8px 0;
+    font-size:clamp(.9rem, 1.5vw, 1.15rem);
+    color:#c8c8c8;
+  }
+
+  .sub { color:#888; font-size:clamp(1.1rem, 2vw, 1.6rem); margin-top:1rem; }
+  .hint { color:#666; font-size:.9rem; margin-top:2rem; }
+  .question { color:#d4a017; font-size:clamp(1.1rem, 2vw, 1.5rem); font-style:italic; margin-top:1.5rem; }
+
+  .digits-box {
+    background:#111;
+    border:1px solid #2a2a2a;
+    border-radius:8px; padding:1.5rem; margin-top:.8rem;
+    max-height:58vh; overflow:auto;
+  }
+  .digits {
+    font-family:'Consolas','Courier New',monospace;
+    font-size:clamp(.75rem, 1.3vw, 1.1rem);
+    color:#d4a017; line-height:1.9; white-space:pre; letter-spacing:.06em;
+  }
+
+  .counter-digits {
+    color:#d4a017; font-size:clamp(1rem, 2vw, 1.5rem);
+    margin-top:1rem;
+  }
+
+  .formula {
+    font-family:'Consolas', monospace;
+    background:#111;
+    border:1px solid #2a2a2a;
+    padding:.8rem 1.2rem; border-radius:6px;
+    color:#d4a017; font-size:clamp(.9rem, 1.5vw, 1.15rem);
+    margin:.8rem 0;
+  }
+
+  .footer {
+    position:absolute; bottom:2vh; right:4vw;
+    color:#444; font-size:.8rem; letter-spacing:.1em; z-index:2;
+  }
+
+  .controls {
+    position:fixed; bottom:2vh; left:50%; transform:translateX(-50%);
+    display:flex; gap:.5rem; z-index:100;
+    background:#111; padding:.5rem 1rem; border-radius:30px;
+    border:1px solid #2a2a2a;
+  }
+  .controls button {
+    background:#1a1a1a;
+    color:#d4a017; border:1px solid #2a2a2a;
+    width:38px; height:38px; border-radius:50%;
+    font-size:1.1rem; cursor:pointer;
+    transition:all .15s;
+  }
+  .controls button:hover {
+    background:#d4a017; color:#0a0a0a; border-color:#d4a017;
+  }
+  .counter {
+    color:#c8c8c8; font-size:.9rem; display:flex; align-items:center;
+    padding:0 .6rem; font-variant-numeric:tabular-nums;
+  }
+
+  .progress {
+    position:fixed; top:0; left:0; height:2px;
+    background:#d4a017;
+    transition:width .4s ease; z-index:101;
+  }
+
+  .trail-digit {
+    position:fixed; pointer-events:none;
+    color:#d4a017; font-family:'Consolas',monospace;
+    z-index:9999; user-select:none;
+    transition:opacity 1.1s ease, transform 1.1s ease;
+  }
+
+  @media print {
+    html,body { overflow:visible; height:auto; }
+    .slide { position:relative; opacity:1 !important; transform:none !important; height:100vh; page-break-after:always; pointer-events:auto !important; }
+    .controls, .progress, .trail-digit { display:none !important; }
+    body { background:#0a0a0a; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="deck" id="deck">
+
+<div class="slide active">
+  <h1>π</h1>
+  <p class="big-claim">Самое знаменитое <span class="gold">число в науке</span>.<br>Его знают школьники, считают суперкомпьютеры, и оно никогда не заканчивается.</p>
+  <p class="sub">История, смысл и 150 знаков бесконечности</p>
+  <p class="hint">→ стрелками или колесом · F — полный экран</p>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>Что такое π</h2>
+  <p>π — отношение длины окружности к её диаметру.</p>
+  <p>Величина постоянная: для монетки на столе и для орбиты Земли вокруг Солнца она одна и та же.</p>
+  <div class="formula">C = π · d &nbsp;&nbsp;|&nbsp;&nbsp; S = π · r²</div>
+  <p>Первые знаки: 3,1415926535… — а дальше без конца и без повторов.</p>
+  <div class="fact">π — иррациональное число. Его нельзя записать конечной дробью. Ламберт доказал это в 1761 году.</div>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>150 знаков после запятой</h2>
+  <div class="digits-box">
+    <div class="digits" id="digits"></div>
+  </div>
+  <div class="counter-digits" id="digitCount">—</div>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>История — от папируса до суперкомпьютера</h2>
+  <ul>
+    <li>~1900 до н.э. — вавилоняне: 25/8 = 3,125</li>
+    <li>~1650 до н.э. — папирус Ринда: 256/81 ≈ 3,160</li>
+    <li>~250 до н.э. — Архимед: 223/71 &lt; π &lt; 22/7</li>
+    <li>~500 н.э. — Цзу Чунчжи: 3,1415926 (шесть знаков)</li>
+    <li>1596 — Лудольф ван Цейлен: 35 знаков, завещал высечь на могиле</li>
+    <li>1706 — Уильям Джонс вводит символ π</li>
+    <li>1737 — Эйлер делает π знаменитым</li>
+  </ul>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>Как считают сейчас</h2>
+  <div class="formula">π/4 = 4·arctan(1/5) − arctan(1/239)</div>
+  <ul>
+    <li>Формула Мачина (1706) — рекордная точность того времени</li>
+    <li>1882 — Линдеман: π трансцендентное, квадратура круга невозможна</li>
+    <li>1949 — ENIAC: 2037 знаков за 70 часов</li>
+    <li>2022 — Google Cloud: 100 трлн знаков за 157 дней</li>
+    <li>2024 — рекорд: 202 трлн знаков</li>
+  </ul>
+  <div class="fact">Тысяча знаков π уже позволяет вычислить окружность Вселенной с точностью меньше атома.</div>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>π в природе</h2>
+  <ul>
+    <li>Река Нил: длина ≈ 3,14 × расстояние до устья — красивая случайность</li>
+    <li>Радуга: угол преломления 42° — чистая геометрия</li>
+    <li>ДНК: шаг спирали связан с 2π/10,5</li>
+    <li>Волны, звук, свет, вода — всё крутится вокруг π</li>
+    <li>Круговые орбиты, маятники, катушки — π везде</li>
+  </ul>
+  <div class="fact">Если натянуть верёвку по окружности радиуса 1 — длина ровно 2π. На этом стоит тригонометрия.</div>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>Интересные факты</h2>
+  <ul>
+    <li>14 марта — День π (3,14), 22 июля — День приближения π (22/7)</li>
+    <li>В первых 10 млн знаков каждая цифра встречается почти одинаково</li>
+    <li>«Пи-фобия» — реальный термин: страх числа π</li>
+    <li>π в двоичной записи: 11,001001… — тоже бесконечность</li>
+    <li>В 2009 году японец Акира Харагучи запомнил 100 000 знаков π</li>
+    <li>Символ π есть в Unicode: U+03C0</li>
+  </ul>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>π в культуре</h2>
+  <ul>
+    <li>Фильм «π» (1998) — про математика и безумие, чёрно-белый</li>
+    <li>«Life of Pi» — роман Янна Мартеля и фильм Энга Ли</li>
+    <li>В Minecraft строят π-статую из миллионов блоков</li>
+    <li>В Roblox есть ежегодные Pi Day ивенты</li>
+    <li>Пиньята в виде π, торт с 3,14 свечками — традиция школ США</li>
+  </ul>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>Мнемоники — запоминаем навсегда</h2>
+  <ul>
+    <li>«Как я хотел и знал, что π — это просто» — 3,1415 (по числу букв)</li>
+    <li>«May I have a large container of coffee» — 3,1415926</li>
+    <li>«Это я знаю и помню прекрасно» — 3,14159</li>
+    <li>«How I wish I could calculate pi» — 3,141592</li>
+    <li>«See I have a rhyme assisting, my feeble brain its tasks resisting» — 3,141592653589</li>
+  </ul>
+  <div class="fact">В каждой фразе число букв в слове = цифра π. Приём старый, но работает.</div>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+<div class="slide">
+  <h2><span class="icon">◆</span>Итог</h2>
+  <p>π — это не просто «3,14».</p>
+  <p>Это бесконечность, упакованная в окружность.</p>
+  <p>Каждый раз, когда крутится колесо — работает π.</p>
+  <p>Каждый раз, когда волна идёт по воде — работает π.</p>
+  <p class="question">Вопрос для зала: сколько знаков π знаете вы?</p>
+  <div class="footer">π · @oll.fx</div>
+</div>
+
+</div>
+
+<div class="controls">
+  <button id="prev" title="Назад (←)">←</button>
+  <div class="counter"><span id="cur">1</span> / <span id="total">10</span></div>
+  <button id="next" title="Вперёд (→)">→</button>
+  <button id="fullscreen" title="Полный экран (F)">⛶</button>
+</div>
+
+<script>
+  // ====== π цифры ======
+  const PI_STRING =
+    "14159265358979323846264338327950288419716939937510" +
+    "58209749445923078164062862089986280348253421170679" +
+    "82148086513282306647093844609550582231725359408128" +
+    "48111745028410270193852110555964462294895493038196" +
+    "44288109756659334461284756482337867831652712019091" +
+    "45648566923460348610454326648213393607260249141273";
+
+  // рендер строки 3, + цифры, разбитые по 10, по 3 строки в группе
+  function renderDigits() {
+    const el = document.getElementById('digits');
+    const count = document.getElementById('digitCount');
+    const chunks = [];
+    for (let i = 0; i < PI_STRING.length; i += 10) {
+      chunks.push(PI_STRING.slice(i, i + 10));
+    }
+    const lines = [];
+    for (let i = 0; i < chunks.length; i += 3) {
+      lines.push(chunks.slice(i, i + 3).join(' '));
+    }
+    el.textContent = '3,\n' + lines.join('\n');
+    count.textContent = PI_STRING.length + ' знаков после запятой';
+  }
+  renderDigits();
+
+  // ====== слайды ======
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const prog = document.getElementById('progress');
+  const curEl = document.getElementById('cur');
+  document.getElementById('total').textContent = total;
+  let idx = 0;
+
+  function show(n) {
+    idx = (n + total) % total;
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    prog.style.width = ((idx + 1) / total * 100) + '%';
+    curEl.textContent = idx + 1;
+  }
+
+  document.getElementById('next').onclick = () => show(idx + 1);
+  document.getElementById('prev').onclick = () => show(idx - 1);
+  document.getElementById('fullscreen').onclick = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(idx + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); document.getElementById('fullscreen').click(); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  let wheelTimeout;
+  window.addEventListener('wheel', e => {
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(() => {
+      if (Math.abs(e.deltaY) > 30) show(idx + (e.deltaY > 0 ? 1 : -1));
+    }, 50);
+  }, { passive: true });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 60) show(idx + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  // ====== хвост цифр π ======
+  const TRAIL_DIGITS = "31415926535897932384626433832795028841971693993751";
+  let lastX = -999, lastY = -999;
+  let digitIdx = 0;
+  const SPAWN_DIST = 10;
+  const SPAWN_TIME = 25;
+  let lastSpawn = 0;
+
+  function spawnDigit(x, y) {
+    const el = document.createElement('span');
+    el.className = 'trail-digit';
+    el.textContent = TRAIL_DIGITS[digitIdx % TRAIL_DIGITS.length];
+    digitIdx++;
+    const size = 12 + Math.random() * 8;
+    el.style.fontSize = size + 'px';
+    el.style.left = (x + (Math.random() - 0.5) * 20) + 'px';
+    el.style.top = (y + (Math.random() - 0.5) * 20) + 'px';
+    el.style.opacity = '0.85';
+    el.style.transform = `rotate(${(Math.random() - 0.5) * 50}deg)`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.opacity = '0';
+      el.style.transform = `translateY(16px) rotate(${(Math.random() - 0.5) * 80}deg) scale(.75)`;
+    });
+    setTimeout(() => el.remove(), 1300);
+  }
+
+  window.addEventListener('mousemove', e => {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const now = performance.now();
+    if (dist >= SPAWN_DIST && now - lastSpawn >= SPAWN_TIME) {
+      spawnDigit(e.clientX, e.clientY);
+      lastX = e.clientX;
+      lastY = e.clientY;
+      lastSpawn = now;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    const now = performance.now();
+    if (now - lastSpawn >= SPAWN_TIME) {
+      spawnDigit(t.clientX, t.clientY);
+      lastSpawn = now;
+    }
+  }, { passive: true });
+</script>
+
+</body>
+</html>
